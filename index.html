@@ -412,6 +412,26 @@ body {
   }
 }
 
+
+
+@media (max-width: 767px) {
+  .ss-photo picture,
+  .ss-photo picture img {
+    display: flex;
+    justify-content: center;
+    align-self: flex-start;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .ss-content{
+    display: flex;
+    justify-content: end;
+    padding-bottom: 4rem;
+    background: linear-gradient(0deg,rgba(0, 0, 0, 1) 29%, rgba(253, 187, 45, 0) 47%);
+  }
+}
+
 .ss-photo picture img {
   transition: transform 1s ease;
 }
@@ -477,11 +497,11 @@ body {
     <!-- Set background-image to your actual B&W photo paths -->
      <div class="ss-photo">
         <picture>
-            <source media="(max-width: 767px)" srcset="images/vikram/slide-1-portrait.jpg">
+            <source media="(max-width: 767px)" srcset="images/vikram/slide-1-portrait.jpg" >
             <img src="images/vikram/slide-1-portrait.jpg" alt="">
         </picture>
     </div>
-    <div class="ss-photo">
+    <div class="ss-photo ss-shift-left">
         <picture>
             <source media="(max-width: 767px)" srcset="images/vikram/slide-3-landscape.jpg">
             <img src="images/vikram/slide-3-landscape.jpg" alt="">
@@ -499,7 +519,7 @@ body {
             <img src="images/vikram/slide-5-portrait.jpg" alt="">
         </picture>
     </div>
-    <div class="ss-photo">
+    <div class="ss-photo ss-shift-left">
         <picture>
             <source media="(max-width: 767px)" srcset="images/vikram/slide-6-portrait.jpg">
             <img src="images/vikram/slide-6-portrait.jpg" alt="">
@@ -760,7 +780,7 @@ body {
   /* ══════════════════════════════════
      SLIDESHOW — scroll-driven
   ══════════════════════════════════ */
-  const SS_PX_PER_SLIDE = 600;
+  const SS_PX_PER_SLIDE = 2000;
 
   const ssStage    = document.getElementById('slideshow-stage');
   const photos     = Array.from(document.querySelectorAll('.ss-photo'));
