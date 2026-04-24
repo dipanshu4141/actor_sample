@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chiyaan Vikram — Actor Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --black:   #000000;
+  --white:   #ffffff;
+  --off-white: #f5f4f0;
+  --grey-1:  #1a1a1a;
+  --grey-2:  #2e2e2e;
+  --grey-3:  #888888;
+  --grey-4:  #cccccc;
+  --accent:  #c0a060;
+}
+
+html { scroll-behavior: auto; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--black);
+  color: var(--white);
+  overflow-x: hidden;
+}
+
+/* ── SCROLL STAGE (hero) ── */
+#scroll-stage { position: relative; }
+
+#sticky-hero {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#frame-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; display: block;
+}
+
+#overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background 0.1s;
+  pointer-events: none; z-index: 1;
+}
+
+.scene {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 2; pointer-events: none;
+  opacity: 0; transform: translateY(18px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  text-align: center; padding: 2rem;
+}
+.scene.visible { opacity: 1; transform: translateY(0); }
+.scene.exit    { opacity: 0; transform: translateY(-18px); }
+.scene-top-left    { align-items: flex-start; justify-content: flex-end; padding: 0 8vw 12vh; text-align: left; }
+.scene-bottom-right{ align-items: flex-end;   justify-content: flex-end; padding: 0 8vw 12vh; text-align: right; }
+.scene-center      { align-items: center; justify-content: center; }
+.scene-bottom-center{ align-items: center; justify-content: flex-end; padding-bottom: 10vh; }
+
+.scene-eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(.55rem, 1vw, .68rem);
+  letter-spacing: .32em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: .9rem; font-weight: 500;
+}
+.scene-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 9vw, 8rem);
+  font-weight: 400; line-height: .95;
+  color: var(--white); letter-spacing: .04em;
+}
+.scene-title em {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-weight: 300; color: var(--accent);
+}
+.scene-title-serif {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 6vw, 5.5rem);
+  font-weight: 300; line-height: 1.1; color: var(--white); letter-spacing: .01em;
+}
+.scene-title-serif em { font-style: italic; color: var(--accent); }
+.scene-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(.75rem, 1.2vw, .88rem); font-weight: 300;
+  color: rgba(255,255,255,.55); margin-top: 1rem;
+  max-width: 380px; line-height: 1.85; letter-spacing: .03em;
+}
+.scene-rule {
+  width: 36px; height: 1px;
+  background: var(--accent); margin: 1rem auto 0;
+}
+.scene-top-left .scene-rule { margin-left: 0; }
+.scene-bottom-right .scene-rule { margin-left: auto; margin-right: 0; }
+
+#progress-bar {
+  position: fixed; bottom: 0; left: 0;
+  height: 1.5px; width: 0%;
+  background: var(--accent); z-index: 100;
+  transition: width .08s linear;
+}
+
+#scroll-hint {
+  position: fixed; bottom: 2.5rem; left: 50%;
+  transform: translateX(-50%);
+  z-index: 10; display: flex; flex-direction: column;
+  align-items: center; gap: .5rem;
+  opacity: 1; transition: opacity .5s;
+}
+#scroll-hint.hidden { opacity: 0; pointer-events: none; }
+#scroll-hint span { font-size: .58rem; letter-spacing: .28em; text-transform: uppercase; color: rgba(255,255,255,.3); }
+#scroll-hint-line {
+  width: 1px; height: 36px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,.35));
+  animation: lineAnim 1.8s ease infinite;
+}
+@keyframes lineAnim {
+  0%,100% { opacity:.3; transform:scaleY(1); }
+  50%      { opacity:1;  transform:scaleY(1.12); }
+}
+
+
+/* ═══════════════════════════════
+   SLIDESHOW SECTION
+═══════════════════════════════ */
+#slideshow-stage { position: relative; }
+
+#slideshow-sticky {
+  position: sticky; top: 0;
+  width: 100%; height: 100vh;
+  overflow: hidden; background: #000;
+}
+
+/* photos absolutely stacked — KEY */
+.ss-photo {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center top;
+  opacity: 0;
+  transition: opacity .65s ease;
+  grid-row: 1;
+}
+.ss-photo.active { opacity: 1; }
+.ss-photo::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.12) 52%, rgba(0,0,0,.55) 100%);
+}
+
+/* content panels absolutely stacked — KEY */
+.ss-content {
+  position: absolute; inset: 0;
+  z-index: 2;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  padding: 0 8vw;
+  max-width: 580px;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .5s ease, transform .5s ease;
+  pointer-events: none;
+}
+.ss-content.active { opacity: 1; transform: translateY(0); }
+
+.ss-eyebrow {
+  font-size: clamp(.55rem, 1vw, .65rem);
+  letter-spacing: .3em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: .75rem; font-weight: 500;
+}
+.ss-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 300; line-height: 1.05; color: var(--white);
+}
+.ss-title em { font-style: italic; color: var(--accent); }
+.ss-rule { width: 30px; height: 1px; background: var(--accent); margin: 1rem 0; }
+
+.ss-stats { display: flex; flex-direction: row; gap: 3rem; flex-wrap: wrap; }
+.ss-stat  { display: flex; flex-direction: column; gap: .2rem; }
+.ss-stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  letter-spacing: .06em; color: var(--white); line-height: 1;
+}
+.ss-stat-lbl {
+  font-size: .57rem; letter-spacing: .17em;
+  text-transform: uppercase; color: rgba(255,255,255,.38);
+}
+
+#ss-big-num {
+  position: absolute; bottom: 7vh; right: 7vw;
+  z-index: 2; pointer-events: none; user-select: none;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(6rem, 16vw, 12rem);
+  line-height: 1; color: rgba(255,255,255,.05);
+}
+#ss-dots {
+  position: absolute; bottom: 2.2rem; left: 50%;
+  transform: translateX(-50%);
+  z-index: 3; display: flex; gap: .45rem;
+}
+.ss-dot {
+  width: 18px; height: 2px; border-radius: 2px;
+  background: rgba(255,255,255,.2);
+  transition: background .35s, width .35s;
+}
+.ss-dot.active { background: var(--accent); width: 34px; }
+#ss-cue {
+  position: absolute; bottom: 2rem; right: 6vw;
+  z-index: 3; font-size: .56rem; letter-spacing: .22em;
+  text-transform: uppercase; color: rgba(255,255,255,.25);
+  display: flex; align-items: center; gap: .6rem; pointer-events: none;
+}
+#ss-cue::before { content: ''; width: 22px; height: 1px; background: rgba(255,255,255,.2); }
+
+
+/* ═══════════════════════════════
+   PORTFOLIO SECTION
+═══════════════════════════════ */
+#portfolio {
+  background: var(--off-white);
+  color: var(--black);
+  position: relative;
+}
+
+#identity-strip {
+  padding: 5rem 7vw 4rem;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end; gap: 2rem;
+}
+.identity-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3.5rem, 10vw, 8rem);
+  letter-spacing: .05em; line-height: .9; color: var(--black);
+}
+.identity-name span {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1.5rem, 3.5vw, 2.8rem);
+  font-weight: 300; letter-spacing: .06em;
+  display: block; color: var(--grey-3); margin-bottom: .5rem;
+}
+.identity-meta { text-align: right; }
+.identity-meta p { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--grey-3); line-height: 2; }
+.identity-meta strong { color: var(--black); font-weight: 500; }
+
+#stats-bar { display: flex; border-bottom: 1px solid rgba(0,0,0,.08); }
+.stat-cell {
+  flex: 1; padding: 2.5rem 2rem;
+  border-right: 1px solid rgba(0,0,0,.08);
+  display: flex; flex-direction: column;
+  align-items: center; gap: .5rem; text-align: center;
+}
+.stat-cell:last-child { border-right: none; }
+.stat-icon { font-size: 1.3rem; opacity: .7; margin-bottom: .2rem; }
+.stat-num { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: .06em; color: var(--black); line-height: 1; }
+.stat-label { font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--grey-3); }
+
+#photo-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+}
+.photo-block { position: relative; overflow: hidden; background: var(--grey-1); cursor: default; }
+.photo-block img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; filter: grayscale(100%) contrast(1.05); transition: transform .7s ease, filter .5s ease; }
+.photo-block:hover img { transform: scale(1.03); filter: grayscale(80%) contrast(1.05); }
+.photo-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem 1.2rem 1rem; background: linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 100%); opacity: 0; transition: opacity .4s ease; color: var(--white); }
+.photo-block:hover .photo-caption { opacity: 1; }
+.photo-caption-role { font-size: .6rem; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: .3rem; }
+.photo-caption-title { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 300; font-style: italic; color: var(--white); }
+
+.photo-block-A { grid-column: 1 / 6;  grid-row: 1; aspect-ratio: 4/5; }
+.photo-block-B { grid-column: 6 / 9;  grid-row: 1; aspect-ratio: 3/4; }
+.photo-block-C { grid-column: 9 / 13; grid-row: 1; aspect-ratio: 4/5; }
+.photo-block-D { grid-column: 1 / 5;  grid-row: 2; aspect-ratio: 5/4; }
+.photo-block-E { grid-column: 5 / 9;  grid-row: 2; aspect-ratio: 5/4; }
+.photo-block-F { grid-column: 9 / 13; grid-row: 2; aspect-ratio: 5/4; }
+
+#attributes {
+  padding: 5rem 7vw;
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 3rem 5rem;
+  border-top: 1px solid rgba(0,0,0,.08);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.attr-group-label {
+  font-size: .6rem; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--grey-3); margin-bottom: 1.2rem;
+  display: flex; align-items: center; gap: .6rem;
+}
+.attr-group-label::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,.1); }
+.attr-tag-list { display: flex; flex-wrap: wrap; gap: .5rem; }
+.attr-tag { font-size: .72rem; letter-spacing: .06em; padding: .35rem .9rem; border: 1px solid rgba(0,0,0,.15); color: var(--grey-2); border-radius: 2px; white-space: nowrap; }
+.attr-tag.highlight { background: var(--black); color: var(--white); border-color: var(--black); }
+
+#filmography { padding: 4rem 7vw 5rem; }
+.section-label { font-size: .6rem; letter-spacing: .3em; text-transform: uppercase; color: var(--grey-3); margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1rem; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,.1); }
+.film-table { width: 100%; border-collapse: collapse; }
+.film-table tr { border-bottom: 1px solid rgba(0,0,0,.07); transition: background .2s; }
+.film-table tr:hover { background: rgba(0,0,0,.03); }
+.film-table td { padding: 1rem 0; vertical-align: middle; }
+.film-year { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--grey-3); letter-spacing: .08em; width: 80px; }
+.film-title { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 400; color: var(--black); font-style: italic; }
+.film-role { font-size: .7rem; color: var(--grey-3); letter-spacing: .1em; text-align: center; width: 180px; }
+.film-badge { text-align: right; }
+.badge { display: inline-block; font-size: .58rem; letter-spacing: .14em; text-transform: uppercase; padding: .25rem .7rem; border-radius: 2px; font-weight: 500; }
+.badge-award      { background: #fdf3dc; color: #9a7a20; border: 1px solid #e8d48a; }
+.badge-blockbuster{ background: #e8f4e8; color: #2a6e2a; border: 1px solid #a8d4a8; }
+.badge-cult       { background: #ece8f4; color: #5a3fa0; border: 1px solid #c4b4e8; }
+
+#contact-strip {
+  background: var(--black); color: var(--white);
+  padding: 5rem 7vw;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 2rem; flex-wrap: wrap;
+}
+.contact-eyebrow { font-size: .6rem; letter-spacing: .28em; text-transform: uppercase; color: var(--grey-3); margin-bottom: 1rem; }
+.contact-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 300; line-height: 1.1; }
+.contact-title em { font-style: italic; color: var(--accent); }
+.contact-right { display: flex; flex-direction: column; gap: 1rem; align-items: flex-end; }
+.contact-link { display: flex; align-items: center; gap: .8rem; text-decoration: none; color: var(--white); font-size: .82rem; letter-spacing: .08em; opacity: .7; transition: opacity .25s; }
+.contact-link:hover { opacity: 1; }
+.contact-link-icon { width: 32px; height: 32px; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .9rem; }
+
+#footer { background: var(--black); border-top: 1px solid rgba(255,255,255,.06); color: rgba(255,255,255,.25); display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 7vw; font-size: .65rem; letter-spacing: .12em; }
+#footer span { color: var(--accent); }
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s ease, transform .8s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal:nth-child(2) { transition-delay: .1s; }
+.reveal:nth-child(3) { transition-delay: .2s; }
+.reveal:nth-child(4) { transition-delay: .3s; }
+.reveal:nth-child(5) { transition-delay: .4s; }
+.reveal:nth-child(6) { transition-delay: .5s; }
+
+@media(max-width: 900px) {
+  #identity-strip { grid-template-columns: 1fr; }
+  .identity-meta { text-align: left; }
+  #stats-bar { flex-wrap: wrap; }
+  .stat-cell { flex: 1 1 45%; border-right: none; border-bottom: 1px solid rgba(0,0,0,.08); }
+  #attributes { grid-template-columns: 1fr 1fr; }
+  .photo-block-A { grid-column: 1 / 7; }
+  .photo-block-B { grid-column: 7 / 13; }
+  .photo-block-C { grid-column: 1 / 5; grid-row: 2; }
+  .photo-block-D { grid-column: 5 / 9; grid-row: 2; }
+  .photo-block-E { grid-column: 9 / 13; grid-row: 2; }
+  .photo-block-F { display: none; }
+  #contact-strip { flex-direction: column; align-items: flex-start; }
+  .contact-right { align-items: flex-start; }
+}
+@media(max-width: 600px) {
+  #attributes { grid-template-columns: 1fr; }
+  .photo-block-A { grid-column: 1 / 13; grid-row: 1; }
+  .photo-block-B { grid-column: 1 / 7;  grid-row: 2; }
+  .photo-block-C { grid-column: 7 / 13; grid-row: 2; }
+  .photo-block-D, .photo-block-E, .photo-block-F { display: none; }
+  .film-role, .film-badge { display: none; }
+  #footer { flex-direction: column; gap: .5rem; text-align: center; }
+  #ss-big-num { display: none; }
+  .ss-stats { gap: 1.4rem; }
+}
+
+
+
+
+
+/* Desktop: split layout */
+@media (min-width: 768px) {
+  #slideshow-sticky {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ss-photo {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .ss-content {
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    background: #000;
+    max-width: 100%;
+    padding: 0 5vw;
+    justify-content: center;
+  }
+}
+
+
+
+
+@media (min-width: 768px) {
+  .ss-photo picture,
+  .ss-photo picture img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+}
+
+.ss-photo picture img {
+  transition: transform 1s ease;
+}
+
+
+</style>
+
+<!-- <audio autoplay>
+  <source src="music.mp3" type="audio/mpeg">
+</audio> -->
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="scroll-hint">
+  <div id="scroll-hint-line"></div>
+  <span>Scroll</span>
+</div>
+
+<!-- ══ HERO — FRAME SCROLL (untouched from working file) ══ -->
+<div id="scroll-stage">
+  <div id="sticky-hero">
+    <canvas id="frame-canvas"></canvas>
+    <div id="overlay"></div>
+
+    <div class="scene scene-center" id="scene-1">
+      <div class="scene-eyebrow">Chiyaan 63 · First Flame</div>
+      <div class="scene-title" style="font-size:clamp(4rem,13vw,11rem)">VIKRAM</div>
+      <div class="scene-rule"></div>
+    </div>
+
+    <div class="scene scene-top-left" id="scene-2">
+      <div class="scene-eyebrow">National Award Winner · 30+ Years</div>
+      <div class="scene-title-serif" style="max-width:500px">Kennedy<br><em>John Victor</em></div>
+      <div class="scene-sub">Tamil cinema's most transformative actor. From Pithamagan to Chiyaan 63 — no role is ever the same.</div>
+    </div>
+
+    <div class="scene scene-center" id="scene-3">
+      <div class="scene-eyebrow">Directed by Anand Shankar · Music by Santhosh Narayanan</div>
+      <div class="scene-title">THE<br><em>FLAME</em><br>BEGINS</div>
+    </div>
+
+    <div class="scene scene-bottom-right" id="scene-4">
+      <div class="scene-eyebrow">Physical Transformation · Method Performer</div>
+      <div class="scene-title-serif" style="max-width:440px">Every character.<br><em>Rebuilt from zero.</em></div>
+      <div class="scene-sub" style="text-align:right">Ghajini. Anniyan. Ravana. Kadaram Kondan. Each role demands a completely new body, voice, and soul.</div>
+    </div>
+
+    <div class="scene scene-bottom-center" id="scene-5">
+      <div class="scene-eyebrow">Produced by SJF · 2024</div>
+      <div class="scene-title" style="font-size:clamp(3rem,8vw,7rem); letter-spacing:.12em">CHIYAAN 63</div>
+      <div class="scene-rule"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ SLIDESHOW — photos with stats ══ -->
+<div id="slideshow-stage">
+  <div id="slideshow-sticky">
+
+    <!-- Add/remove .ss-photo divs to change slide count -->
+    <!-- Set background-image to your actual B&W photo paths -->
+     <div class="ss-photo">
+        <picture>
+            <source media="(max-width: 767px)" srcset="images/vikram/slide-1-portrait.jpg">
+            <img src="images/vikram/slide-1-portrait.jpg" alt="">
+        </picture>
+    </div>
+    <div class="ss-photo">
+        <picture>
+            <source media="(max-width: 767px)" srcset="images/vikram/slide-3-landscape.jpg">
+            <img src="images/vikram/slide-3-landscape.jpg" alt="">
+        </picture>
+    </div>
+    <div class="ss-photo">
+        <picture>
+            <source media="(max-width: 767px)" srcset="images/vikram/slide-3-portrait.jpg">
+            <img src="images/vikram/slide-4-portrait.jpg" alt="">
+        </picture>
+    </div>
+    <div class="ss-photo">
+        <picture>
+            <source media="(max-width: 767px)" srcset="images/vikram/slide-5-portrait.jpg">
+            <img src="images/vikram/slide-5-portrait.jpg" alt="">
+        </picture>
+    </div>
+    <div class="ss-photo">
+        <picture>
+            <source media="(max-width: 767px)" srcset="images/vikram/slide-6-portrait.jpg">
+            <img src="images/vikram/slide-6-portrait.jpg" alt="">
+        </picture>
+    </div>
+
+    <div class="ss-content">
+      <div class="ss-eyebrow">Physical Profile</div>
+      <div class="ss-title">Height <em>6′ 0″</em><br>183 cm</div>
+      <div class="ss-rule"></div>
+      <div class="ss-stats">
+        <div class="ss-stat"><div class="ss-stat-val">68 – 96 kg</div><div class="ss-stat-lbl">Weight Across Roles</div></div>
+        <div class="ss-stat"><div class="ss-stat-val">Dark Brown</div><div class="ss-stat-lbl">Eye Colour</div></div>
+      </div>
+    </div>
+
+    <div class="ss-content">
+      <div class="ss-eyebrow">Career · Active Since 1990</div>
+      <div class="ss-title"><em>60+</em> Films<br>Across 3 Decades</div>
+      <div class="ss-rule"></div>
+      <div class="ss-stats">
+        <div class="ss-stat"><div class="ss-stat-val">₹430 Cr</div><div class="ss-stat-lbl">Top Film WW · Vikram 2022</div></div>
+        <div class="ss-stat"><div class="ss-stat-val">15+</div><div class="ss-stat-lbl">Physical Transformations</div></div>
+      </div>
+    </div>
+
+    <div class="ss-content">
+      <div class="ss-eyebrow">National Award Winner</div>
+      <div class="ss-title">Best Actor<br><em>Pithamagan</em> · 2003</div>
+      <div class="ss-rule"></div>
+      <div class="ss-stats">
+        <div class="ss-stat"><div class="ss-stat-val">×4</div><div class="ss-stat-lbl">Filmfare South · Best Actor</div></div>
+        <div class="ss-stat"><div class="ss-stat-val">SIIMA</div><div class="ss-stat-lbl">Outstanding Achievement</div></div>
+      </div>
+    </div>
+
+    <div class="ss-content">
+      <div class="ss-eyebrow">Craft · Method Actor</div>
+      <div class="ss-title">Every role<br>a <em>new birth.</em></div>
+      <div class="ss-rule"></div>
+      <div class="ss-stats">
+        <div class="ss-stat"><div class="ss-stat-val">4</div><div class="ss-stat-lbl">Languages</div></div>
+        <div class="ss-stat"><div class="ss-stat-val">Martial Arts</div><div class="ss-stat-lbl">Stunt · Dance · Combat</div></div>
+      </div>
+    </div>
+
+    <div class="ss-content">
+      <div class="ss-eyebrow">Chiyaan 63 · 2024</div>
+      <div class="ss-title"><em>First Flame</em><br>Dir. Anand Shankar</div>
+      <div class="ss-rule"></div>
+      <div class="ss-stats">
+        <div class="ss-stat"><div class="ss-stat-val">SJF</div><div class="ss-stat-lbl">Production House</div></div>
+        <div class="ss-stat"><div class="ss-stat-val">Santhosh Narayanan</div><div class="ss-stat-lbl">Music</div></div>
+      </div>
+    </div>
+
+    <div id="ss-big-num">01</div>
+    <div id="ss-dots"></div>
+    <div id="ss-cue">Scroll</div>
+  </div>
+</div>
+
+
+<!-- ══ PORTFOLIO SECTION ══ -->
+<section id="portfolio">
+
+  <div id="identity-strip" class="reveal">
+    <div>
+      <div class="identity-name">
+        <span>Actor / Performer</span>
+        Chiyaan<br>Vikram
+      </div>
+    </div>
+    <div class="identity-meta">
+      <p><strong>Real Name</strong><br>Kennedy John Victor</p>
+      <p style="margin-top:1rem"><strong>Language</strong><br>Tamil · Hindi · Telugu</p>
+      <p style="margin-top:1rem"><strong>Union</strong><br>South Indian Film Chamber</p>
+      <p style="margin-top:1rem"><strong>Based in</strong><br>Chennai, India</p>
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <div class="stat-cell reveal"><div class="stat-icon">🎬</div><div class="stat-num">60+</div><div class="stat-label">Films</div></div>
+    <div class="stat-cell reveal"><div class="stat-icon">🏆</div><div class="stat-num">1</div><div class="stat-label">National Award</div></div>
+    <div class="stat-cell reveal"><div class="stat-icon">🎭</div><div class="stat-num">30+</div><div class="stat-label">Years Active</div></div>
+    <div class="stat-cell reveal"><div class="stat-icon">💰</div><div class="stat-num">₹500Cr+</div><div class="stat-label">Box Office (Top Films)</div></div>
+    <div class="stat-cell reveal"><div class="stat-icon">🔄</div><div class="stat-num">15+</div><div class="stat-label">Physical Transformations</div></div>
+  </div>
+<!-- 
+  <div id="photo-grid">
+    <div class="photo-block photo-block-A reveal">
+      <img src="images/vikram/slide-1-portrait.jpg.jpg" alt="Chiyaan Vikram">
+      <div class="photo-caption"><span class="photo-caption-role">Lead Role</span><div class="photo-caption-title">Pithamagan, 2003</div></div>
+    </div>
+    <div class="photo-block photo-block-B reveal">
+      <img src="images/vikram/slide-2-portrait.jpg.jpg" alt="Chiyaan Vikram">
+      <div class="photo-caption"><span class="photo-caption-role">Triple Role</span><div class="photo-caption-title">Anniyan, 2005</div></div>
+    </div>
+    <div class="photo-block photo-block-C reveal">
+      <img src="images/vikram/slide-3-portrait.jpg.jpg" alt="Chiyaan Vikram">
+      <div class="photo-caption"><span class="photo-caption-role">Action Lead</span><div class="photo-caption-title">Ghajini, 2005</div></div>
+    </div>
+    <div class="photo-block photo-block-D reveal">
+      <img src="images/vikram/slide-4-portrait.jpg.jpg" alt="Chiyaan Vikram">
+      <div class="photo-caption"><span class="photo-caption-role">Character Role</span><div class="photo-caption-title">Vikram, 2022</div></div>
+    </div>
+    <div class="photo-block photo-block-E reveal">
+      <img src="images/vikram/slide-5-portrait.jpg.jpg" alt="Chiyaan Vikram">
+      <div class="photo-caption"><span class="photo-caption-role">Lead</span><div class="photo-caption-title">Chiyaan 63, 2024</div></div>
+    </div>
+    <div class="photo-block photo-block-F reveal">
+      <img src="images/vikram/slide-5-portrait.jpg.jpg" alt="Chiyaan Vikram">
+      <div class="photo-caption"><span class="photo-caption-role">Period Drama</span><div class="photo-caption-title">Ponniyin Selvan II</div></div>
+    </div>
+  </div> -->
+
+  <div id="attributes">
+    <div class="attr-group reveal">
+      <div class="attr-group-label">🎭 &nbsp;Performance Range</div>
+      <div class="attr-tag-list">
+        <span class="attr-tag highlight">Method Acting</span>
+        <span class="attr-tag highlight">Physical Transformation</span>
+        <span class="attr-tag">Action</span><span class="attr-tag">Drama</span>
+        <span class="attr-tag">Character Roles</span><span class="attr-tag">Multi-role</span>
+        <span class="attr-tag">Period</span><span class="attr-tag">Thriller</span>
+      </div>
+    </div>
+    <div class="attr-group reveal">
+      <div class="attr-group-label">💪 &nbsp;Physical Capabilities</div>
+      <div class="attr-tag-list">
+        <span class="attr-tag highlight">Extreme Body Transformation</span>
+        <span class="attr-tag">Martial Arts</span><span class="attr-tag">Stunt Work</span>
+        <span class="attr-tag">Combat Choreography</span>
+        <span class="attr-tag">Dance (Classical + Folk)</span>
+        <span class="attr-tag">Weapons Training</span>
+      </div>
+    </div>
+    <div class="attr-group reveal">
+      <div class="attr-group-label">🌐 &nbsp;Languages / Accents</div>
+      <div class="attr-tag-list">
+        <span class="attr-tag highlight">Tamil (Native)</span>
+        <span class="attr-tag highlight">Hindi</span>
+        <span class="attr-tag">Telugu</span><span class="attr-tag">English</span>
+        <span class="attr-tag">Dialect Flexibility</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="filmography">
+    <div class="section-label reveal">Selected Filmography</div>
+    <table class="film-table">
+      <tr class="reveal"><td class="film-year">2024</td><td class="film-title">Chiyaan 63</td><td class="film-role">Lead · Dir. Anand Shankar</td><td class="film-badge"><span class="badge badge-blockbuster">Upcoming</span></td></tr>
+      <tr class="reveal"><td class="film-year">2023</td><td class="film-title">Ponniyin Selvan II</td><td class="film-role">Aditya Karikalan · Dir. Mani Ratnam</td><td class="film-badge"><span class="badge badge-blockbuster">Blockbuster</span></td></tr>
+      <tr class="reveal"><td class="film-year">2022</td><td class="film-title">Vikram</td><td class="film-role">Karnan · Dir. Lokesh Kanagaraj</td><td class="film-badge"><span class="badge badge-blockbuster">₹430 Cr WW</span></td></tr>
+      <tr class="reveal"><td class="film-year">2009</td><td class="film-title">Kanthaswamy</td><td class="film-role">Lead · Dir. P. Boopathy Pandian</td><td class="film-badge"></td></tr>
+      <tr class="reveal"><td class="film-year">2008</td><td class="film-title">Dasavathaaram</td><td class="film-role">10 Roles · Dir. K. S. Ravikumar</td><td class="film-badge"><span class="badge badge-cult">Cult</span></td></tr>
+      <tr class="reveal"><td class="film-year">2005</td><td class="film-title">Anniyan</td><td class="film-role">Triple Role · Dir. Shankar</td><td class="film-badge"><span class="badge badge-award">Filmfare Award</span></td></tr>
+      <tr class="reveal"><td class="film-year">2005</td><td class="film-title">Ghajini</td><td class="film-role">Lead · Dir. A.R. Murugadoss</td><td class="film-badge"><span class="badge badge-blockbuster">Blockbuster</span></td></tr>
+      <tr class="reveal"><td class="film-year">2003</td><td class="film-title">Pithamagan</td><td class="film-role">Lead · Dir. Bala</td><td class="film-badge"><span class="badge badge-award">National Award</span></td></tr>
+    </table>
+  </div>
+
+  <div id="contact-strip">
+    <div class="contact-left reveal">
+      <div class="contact-eyebrow">Casting Enquiries</div>
+      <div class="contact-title">For representation<br>& <em>project discussions.</em></div>
+    </div>
+    <div class="contact-right reveal">
+      <a href="mailto:casting@chiyaanvikram.com" class="contact-link"><div class="contact-link-icon">✉</div>casting@chiyaanvikram.com</a>
+      <a href="tel:+91XXXXXXXXXX" class="contact-link"><div class="contact-link-icon">📞</div>+91 — — — — — — — — (via team)</a>
+      <a href="https://instagram.com/chiyaan_vikram_offl" target="_blank" class="contact-link"><div class="contact-link-icon">◎</div>@chiyaan_vikram_offl</a>
+    </div>
+  </div>
+
+</section>
+
+<footer id="footer">
+  <div>© 2025 Chiyaan Vikram · All Rights Reserved</div>
+  <div><span>Actor · Performer · Icon</span></div>
+  <div>Chennai, India</div>
+</footer>
+
+
+<script>
+(function () {
+
+  /* ══════════════════════════════════
+     HERO — frame scroll (unchanged)
+  ══════════════════════════════════ */
+  const TOTAL_FRAMES    = 383;
+  const FRAME_PATH      = 'frames/';
+  const PX_PER_FRAME    = 22;
+  const SCROLL_DISTANCE = TOTAL_FRAMES * PX_PER_FRAME;
+
+  function frameSrc(n) {
+    return FRAME_PATH + 'frames_' + String(n).padStart(4, '0') + '.jpg';
+  }
+
+  const canvas     = document.getElementById('frame-canvas');
+  const stage      = document.getElementById('scroll-stage');
+  const sticky     = document.getElementById('sticky-hero');
+  const overlay    = document.getElementById('overlay');
+  const progBar    = document.getElementById('progress-bar');
+  const scrollHint = document.getElementById('scroll-hint');
+  const ctx        = canvas.getContext('2d');
+
+  const scenes = [
+    { el: document.getElementById('scene-1'), inAt: 0,    outAt: 0.16 },
+    { el: document.getElementById('scene-2'), inAt: 0.18, outAt: 0.40 },
+    { el: document.getElementById('scene-3'), inAt: 0.42, outAt: 0.60 },
+    { el: document.getElementById('scene-4'), inAt: 0.62, outAt: 0.82 },
+    { el: document.getElementById('scene-5'), inAt: 0.84, outAt: 1.0  },
+  ];
+
+  stage.style.height = (SCROLL_DISTANCE + window.innerHeight) + 'px';
+
+  const frames = new Array(TOTAL_FRAMES).fill(null);
+  let lastDrawnImg = null;
+
+  function resizeCanvas() {
+    canvas.width  = sticky.offsetWidth;
+    canvas.height = sticky.offsetHeight;
+    if (lastDrawnImg) drawFrame(lastDrawnImg);
+  }
+  window.addEventListener('resize', () => {
+    stage.style.height = (SCROLL_DISTANCE + window.innerHeight) + 'px';
+    ssStage.style.height = (SS_TOTAL * SS_PX_PER_SLIDE + window.innerHeight) + 'px';
+    resizeCanvas();
+  }, { passive: true });
+  setTimeout(resizeCanvas, 80);
+
+  function drawFrame(img) {
+    if (!img || !img.complete || !img.naturalWidth) return;
+    lastDrawnImg = img;
+    const cw = canvas.width, ch = canvas.height;
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const scale = Math.max(cw / iw, ch / ih);
+    const dw = iw * scale, dh = ih * scale;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+  }
+
+  const first = new Image();
+  first.onload = () => { frames[0] = first; drawFrame(first); loadRest(); };
+  first.onerror = () => console.warn('Frame 1 not found:', frameSrc(1));
+  first.src = frameSrc(1);
+
+  function loadRest() {
+    for (let i = 2; i <= TOTAL_FRAMES; i++) {
+      (function(idx) {
+        const img = new Image();
+        img.onload = () => { frames[idx - 1] = img; };
+        setTimeout(() => { img.src = frameSrc(idx); }, (idx - 1) * 10);
+      })(i);
+    }
+  }
+
+  /* ══════════════════════════════════
+     SLIDESHOW — scroll-driven
+  ══════════════════════════════════ */
+  const SS_PX_PER_SLIDE = 600;
+
+  const ssStage    = document.getElementById('slideshow-stage');
+  const photos     = Array.from(document.querySelectorAll('.ss-photo'));
+  const contents   = Array.from(document.querySelectorAll('.ss-content'));
+  const dotsWrap   = document.getElementById('ss-dots');
+  const bigNum     = document.getElementById('ss-big-num');
+  const SS_TOTAL   = 5;
+
+  ssStage.style.height = (SS_TOTAL * SS_PX_PER_SLIDE + window.innerHeight) + 'px';
+
+  /* Build dots */
+  photos.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'ss-dot' + (i === 0 ? ' active' : '');
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.querySelectorAll('.ss-dot'));
+
+  /* Activate slide 0 */
+  if (photos[0])   photos[0].classList.add('active');
+  if (contents[0]) contents[0].classList.add('active');
+
+  let currentSlide = 0;
+
+  function updateSlideshow() {
+    const scrolled = Math.max(0, -ssStage.getBoundingClientRect().top);
+    const idx = Math.min(SS_TOTAL - 1, Math.floor(scrolled / SS_PX_PER_SLIDE));
+    if (idx === currentSlide) return;
+    currentSlide = idx;
+    photos.forEach((p, i)   => p.classList.toggle('active', i === idx));
+    contents.forEach((c, i) => c.classList.toggle('active', i === idx));
+    dots.forEach((d, i)     => d.classList.toggle('active', i === idx));
+    if (bigNum) bigNum.textContent = String(idx + 1).padStart(2, '0');
+  }
+
+  /* ══════════════════════════════════
+     SCROLL LOOP
+  ══════════════════════════════════ */
+  let ticking = false;
+
+  function onScroll() {
+    if (!ticking) { requestAnimationFrame(update); ticking = true; }
+  }
+
+  function update() {
+    ticking = false;
+
+    /* Hero frames */
+    const scrolled  = Math.max(0, -stage.getBoundingClientRect().top);
+    const progress  = Math.min(1, scrolled / SCROLL_DISTANCE);
+    const frameIdx  = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * TOTAL_FRAMES));
+
+    if (frames[frameIdx]) {
+      drawFrame(frames[frameIdx]);
+    } else {
+      for (let d = 1; d < 20; d++) {
+        if (frameIdx - d >= 0 && frames[frameIdx - d]) { drawFrame(frames[frameIdx - d]); break; }
+        if (frameIdx + d < TOTAL_FRAMES && frames[frameIdx + d]) { drawFrame(frames[frameIdx + d]); break; }
+      }
+    }
+
+    /* Progress bar */
+    const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+    progBar.style.width = (window.scrollY / totalScroll * 100) + '%';
+
+    /* Scroll hint */
+    scrollHint.classList.toggle('hidden', scrolled > 80);
+
+    /* Overlay */
+    overlay.style.background = `rgba(0,0,0,${Math.sin(progress * Math.PI) * 0.5})`;
+
+    /* Scenes */
+    scenes.forEach(s => {
+      const active = progress >= s.inAt && progress < s.outAt;
+      const past   = progress >= s.outAt;
+      s.el.classList.remove('visible', 'exit');
+      if (active)    s.el.classList.add('visible');
+      else if (past) s.el.classList.add('exit');
+    });
+
+    /* Slideshow */
+    updateSlideshow();
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  /* Reveal observer */
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+  update();
+})();
+</script>
+</body>
+</html>
